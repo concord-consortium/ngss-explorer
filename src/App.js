@@ -40,6 +40,17 @@ function Item(props) {
   let comprisedOf = props.value["http://purl.org/ASN/schema/core/comprisedOf"];
   let parents = props.value["http://purl.org/gem/qualifiers/isChildOf"];
 
+  let reverseComprisedOf = [];
+  // Need to search all of the items to see if this is in any of their comprised of lists
+  Object.entries(NGSS).forEach((entry) => {
+    let entryComprisedOf = entry[1].["http://purl.org/ASN/schema/core/comprisedOf"];
+    if (entryComprisedOf){
+      if (entryComprisedOf.some((comprisedOfItem) => comprisedOfItem.value == props.uri)){
+        reverseComprisedOf.push({value: entry[0], type: 'uri'});
+      }
+    }
+  });
+
   return (
     <dl>
       <dt>ID</dt>
@@ -78,6 +89,11 @@ function Item(props) {
         <dd><ItemList list={parents}/></dd>
       </> }
 
+      { reverseComprisedOf && reverseComprisedOf.length > 0 && <>
+        <dt>Reverse Comprised of</dt>
+        <dd><ItemList list={reverseComprisedOf}/></dd>
+      </> }
+
       <hr/>
     </dl>
   );
@@ -95,6 +111,9 @@ function getType(item) {
 
   let statementLabel = getText(item, "http://purl.org/ASN/schema/core/statementLabel");
   if(statementLabel) {
+    if(statementLabel == "Disciplinary Core Idea"){
+      return "DCI Arrangement";
+    }
     return statementLabel;
   }
 
@@ -128,10 +147,10 @@ function ItemSummary(props) {
     <div>
       <ItemLink uri={props.uri}/>
       {type &&
-        <b>&nbsp;{type}</b>
+        <b>&nbsp;{type} -</b>
       }
       {statementNotation &&
-        <b>&nbsp;{statementNotation}</b>
+        <b>&nbsp;{statementNotation} -</b>
       }
       &nbsp;{description}
     </div>
